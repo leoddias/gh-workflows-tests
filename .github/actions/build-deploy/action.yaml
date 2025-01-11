@@ -1,0 +1,13 @@
+name: Build And Deploy
+description: Build a PR
+inputs:
+  deploy-to-env:
+    description: Env name to deploy
+    required: true
+runs:
+  using: "composite"
+  environment: ${{ inputs.deploy-to-env }}
+  steps:
+    - name: Build And Deploy
+      run: |
+        echo "Info: Deploying '${{ inputs.deploy-to-env }}'."

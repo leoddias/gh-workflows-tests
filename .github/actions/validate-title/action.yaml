@@ -1,0 +1,15 @@
+name: Validate PR Title
+description: Validates a PR title and runs tests.
+inputs:
+  required-string:
+    description: The string that must be in the PR title.
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Validate PR Title
+      run: |
+        if [[ "$GITHUB_HEAD_REF" != *"${{ inputs.required-string }}"* ]]; then
+          echo "Error: PR title must include '${{ inputs.required-string }}'."
+          exit 1
+        fi

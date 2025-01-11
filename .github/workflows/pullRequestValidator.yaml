@@ -1,0 +1,54 @@
+name: Pull Request Validator
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  issues: write
+  pull-requests: write
+  
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  pull-request-validator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Validate PR Title
+        uses: ./.github/actions/validate-title
+        with:
+          required-string: "TEAM"
+
+      - name: Build And Deploy
+        uses: ./.github/actions/build-deploy
+        with:
+          deploy-to-env: ${{ github.ref }}
+
+      - name: Notify If Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const author = context.payload.pull_request.user.login;
+
+            let failedStep = 'Unknown';
+            if ('${{steps['validate-title'].outcome}}' == 'failure') {
+              failedStep = 'Validate PR Title';
+            } else if ('${{steps['build-deploy'].outcome}}' == 'failure') {
+              failedStep = 'Build And Deploy';
+            }
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `@${author}, o seguinte step falhou: **${failedStep}**. Por favor, verifique.`
+            });
