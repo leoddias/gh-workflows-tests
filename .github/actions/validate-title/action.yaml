@@ -6,9 +6,9 @@ inputs:
     required: true
 runs:
   using: "composite"
-  shell: bash
   steps:
     - name: Validate PR Title
+      shell: bash
       run: |
         if [[ "$GITHUB_HEAD_REF" != *"${{ inputs.required-string }}"* ]]; then
           echo "Error: PR title must include '${{ inputs.required-string }}'."
