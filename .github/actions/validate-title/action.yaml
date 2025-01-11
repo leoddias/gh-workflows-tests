@@ -10,7 +10,8 @@ runs:
     - name: Validate PR Title
       shell: bash
       run: |
-        if [[ "$GITHUB_HEAD_REF" != *"${{ inputs.required-string }}"* ]]; then
+        echo "Validate PR Title ${{ github.event.pull_request.title }}"
+        if [[ "${{ github.event.pull_request.title }}" != *"${{ inputs.required-string }}"* ]]; then
           echo "Error: PR title must include '${{ inputs.required-string }}'."
           exit 1
         fi
