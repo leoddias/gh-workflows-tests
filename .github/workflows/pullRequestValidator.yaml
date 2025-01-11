@@ -1,4 +1,5 @@
 name: Pull Request Validator
+run-name: "Pull Request Validator - PR ${{ github.event.number }}"
 
 on:
   pull_request:
