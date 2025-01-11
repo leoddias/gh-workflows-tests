@@ -6,9 +6,9 @@ inputs:
     required: true
 runs:
   using: "composite"
-  shell: bash
   environment: ${{ inputs.deploy-to-env }}
   steps:
     - name: Build And Deploy
+      shell: bash
       run: |
         echo "Info: Deploying '${{ inputs.deploy-to-env }}'."

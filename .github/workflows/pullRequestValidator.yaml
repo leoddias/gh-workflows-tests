@@ -26,11 +26,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate PR Title
+        id: validate-title
         uses: ./.github/actions/validate-title
         with:
           required-string: "TEAM"
 
       - name: Build And Deploy
+        id: build-deploy
         uses: ./.github/actions/build-deploy
         with:
           deploy-to-env: ${{ github.ref }}
