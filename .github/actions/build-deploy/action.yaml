@@ -6,9 +6,7 @@ inputs:
     required: true
 runs:
   using: "composite"
-  defaults:
-    run:
-      shell: bash
+  shell: bash
   environment: ${{ inputs.deploy-to-env }}
   steps:
     - name: Build And Deploy
