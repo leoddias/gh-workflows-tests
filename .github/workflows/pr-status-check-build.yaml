@@ -1,5 +1,5 @@
 name: PR Status Check Build
-run-name: "PR Status Check Build - Branch ${{ github.event.workflow_run.head_branch }}"
+run-name: "PR Status Check Build - Branchs ${{ github.event.workflow_run.head_branch }}"
 
 on:
   workflow_run:
@@ -8,9 +8,9 @@ on:
     types:
       - completed
 
-  # concurrency:
-  #   group: ${{ github.workflow }}-${{ github.ref }}
-  #   cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
 
 permissions:
   issues: write
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Build And Deploy
-        if: ${{ github.event.workflow_run.conclusion == 'failed' }}
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         id: build-deploy
         with:
           deploy-to-env: ${{ github.ref }}
@@ -41,14 +41,22 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
-            const author = context.payload.pull_request.user.login;
-
-            github.rest.issues.createComment({
+            const prNumber = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber,
-              body: `@${author},❌ Build/Deploy Failed, please check workflow logs at´
-            });
+              head: `${context.repo.owner}:${github.event.workflow_run.head_branch}`
+            }).then(response => response.data[0]?.number);
 
-###${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            const author = context.payload.actor;
+
+            if (prNumber) {
+              const workflowRunLink = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `@${author},❌ Build/Deploy Failed, please check workflow logs at ${workflowRunLink}`
+              });
+            } else {
+              console.log("PR not found for the branch");
+            }
