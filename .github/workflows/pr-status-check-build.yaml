@@ -1,5 +1,5 @@
 name: PR Status Check Build
-# run-name: "PR Status Check Build - PR ${{ github.event.number }}"
+run-name: "PR Status Check Build - PR ${{ github.event.number }}"
 
 on:
   workflow_run:
