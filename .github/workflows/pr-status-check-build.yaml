@@ -3,7 +3,7 @@ name: PR Status Check Build
 
 on:
   workflow_run:
-    workflows: ["PR Status Check Validate Title"]
+    workflows: [PR Status Check Validate Title]
     types:
       - completed
 
