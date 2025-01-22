@@ -7,9 +7,9 @@ on:
     types:
       - completed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 permissions:
   issues: write
@@ -22,12 +22,12 @@ defaults:
 jobs:
   pr-status-check-build:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Build And Deploy
+        if: ${{ github.event.workflow_run.conclusion == 'failed' }}
         id: build-deploy
         with:
           deploy-to-env: ${{ github.ref }}
