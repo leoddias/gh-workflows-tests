@@ -1,5 +1,5 @@
 name: PR Status Check Validate Title
-# run-name: "PR Status Check Validate Title - PR ${{ github.event.number }}"
+run-name: "PR Status Check Validate Title - PR ${{ github.event.number }}"
 
 on:
   pull_request:
