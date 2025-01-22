@@ -1,5 +1,5 @@
 name: PR Status Check Build
-run-name: "PR Status Check Build - PR ${{ github.event.number }}"
+run-name: "PR Status Check Build - Branch ${{ github.event.workflow_run.head_branch }}"
 
 on:
   workflow_run:
@@ -8,9 +8,9 @@ on:
     types:
       - completed
 
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.ref }}
-#   cancel-in-progress: true
+  # concurrency:
+  #   group: ${{ github.workflow }}-${{ github.ref }}
+  #   cancel-in-progress: true
 
 permissions:
   issues: write
