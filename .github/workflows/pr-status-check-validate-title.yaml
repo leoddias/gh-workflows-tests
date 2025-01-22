@@ -1,10 +1,11 @@
 name: PR Status Check Validate Title
-run-name: "PR Status Check Validate Title - PR ${{ github.event.number }}"
+# run-name: "PR Status Check Validate Title - PR ${{ github.event.number }}"
 
 on:
   pull_request:
     branches:
       - develop
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

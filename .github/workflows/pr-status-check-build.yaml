@@ -1,14 +1,16 @@
 name: PR Status Check Build
-run-name: "PR Status Check Build - PR ${{ github.event.number }}"
+# run-name: "PR Status Check Build - PR ${{ github.event.number }}"
 
 on:
-  pull_request:
-    branches:
-      - develop
+  workflow_run:
+    workflows:
+      - PR Status Check Validate Title
+    types:
+      - completed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 permissions:
   issues: write
@@ -22,26 +24,20 @@ jobs:
   pr-status-check-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for validate title to succeed
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          wait-interval: 30
-          ref: ${{ github.ref }}
-          allowed-conclusions: success
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          check-name: "pr-status-check-validate-title"
-
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Build And Deploy
+        if: ${{ github.event.workflow_run.conclusion == 'failed' }}
         id: build-deploy
         with:
           deploy-to-env: ${{ github.ref }}
         uses: ./.github/actions/build-deploy
 
       - name: Notify If Failure
-        if: failure()
+        if: steps.build-deploy.conclusion == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
@@ -52,5 +48,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `@${author},❌ Build/Deploy Failed, please check workflow logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+              body: `@${author},❌ Build/Deploy Failed, please check workflow logs at´
             });
+
+###${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
