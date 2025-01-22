@@ -3,13 +3,14 @@ name: PR Status Check Build
 
 on:
   workflow_run:
-    workflows: ["PR Status Check Validate Title"]
+    workflows:
+      - PR Status Check Validate Title
     types:
       - completed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 permissions:
   issues: write
@@ -22,12 +23,14 @@ defaults:
 jobs:
   pr-status-check-build:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Build And Deploy
+        if: ${{ github.event.workflow_run.conclusion == 'failed' }}
         id: build-deploy
         with:
           deploy-to-env: ${{ github.ref }}
@@ -45,5 +48,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `@${author},❌ Build/Deploy Failed, please check workflow logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+              body: `@${author},❌ Build/Deploy Failed, please check workflow logs at´
             });
+
+###${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
