@@ -1,0 +1,58 @@
+name: Create Release Artifact and TAG
+run-name: "Create Release Artifact and TAG - Deploy in ${{ inputs.environment }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prd
+      release-branch:
+        description: "Current release branch name"
+        required: true
+        type: string
+      hotfix-branch:
+        description: "Hotfix branch name to deploy"
+        required: false
+        type: string
+        default: empty
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  create-release-artifact-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        ref: ${{ github.event.inputs.hotfix-branch != 'empty' && github.event.inputs.hotfix-branch || github.event.inputs.release-branch }}
+
+      - name: Build And Deploy
+        id: build-deploy
+        uses: ./.github/actions/build-deploy
+        with:
+          deploy-to-env: ${{ inputs.environment }}
+
+      - name: Generate and Push TAG
+        id: generate-and-push-tag
+        uses: ./.github/actions/generate-and-push-tag
+        with:
+          branch: ${{ inputs.release-branch }}
+
+      - name: Output TAG value
+        run: |
+          echo "New Version Deployed with Succes ${{ steps.generate-tag.outputs.new_tag }}"

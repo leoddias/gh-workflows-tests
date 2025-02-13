@@ -1,0 +1,41 @@
+name: Generate new Release TAG and Push
+description: Generate a new TAG based on the latest one and push
+inputs:
+  branch:
+    description: The release branch
+    required: true
+
+outputs:
+  new_tag:
+    description: "New TAG"
+    value: ${{ steps.generate_new_tag.outputs.new_tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract version from branch
+      shell: bash
+      id: extract_version
+      run: |
+        VERSION=$(echo ${{ inputs.branch }} | sed 's/release\///')
+        echo "Extracted version: $VERSION"
+
+        git fetch --tags
+        LATEST_TAG=$(git tag --list "$VERSION.*" --sort=-v:refname | head -n 1)
+        if [ -z "$LATEST_TAG" ]; then
+          LATEST_TAG="$VERSION.0"
+        fi
+        echo "Latest tag for for the current release - Version $VERSION - Last TAG $LATEST_TAG"
+
+        PATCH_VERSION=$(echo $LATEST_TAG | awk -F. '{print $3}')
+        NEW_PATCH_VERSION=$((PATCH_VERSION + 1))
+        NEW_TAG="$VERSION.$NEW_PATCH_VERSION"
+        echo "Generated New TAG Version: $NEW_TAG"
+
+        github.rest.git.createRef({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          ref: 'refs/tags/${{ steps.get_latest_tag.outputs.new_tag }}',
+          sha: context.sha
+        })
+        echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
