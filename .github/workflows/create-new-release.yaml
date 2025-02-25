@@ -1,0 +1,56 @@
+name: Create new Release from Develop
+on:
+  workflow_dispatch:
+    inputs:
+      new_release_branch:
+        description: Like release/v1.0
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      new_release_branch:
+        description: Like release/v1.0
+        type: string
+        required: true
+
+run-name: "Creating new release branch ${{ inputs.new_release_branch }}"
+
+permissions:
+  contents: write
+
+jobs:
+  new-release:
+    name: Creating new release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+
+      - name: Check if release branch already exists
+        run: |
+          git fetch --all
+          if git show-ref --verify --quiet refs/remotes/origin/${{ inputs.new_release_branch }}; then
+            echo "Error: Branch ${{ inputs.new_release_branch }} already exists!"
+            exit 1
+          else
+            echo "Branch ${{ inputs.new_release_branch }} does not exist, proceeding..."
+          fi
+        continue-on-error: false
+
+      - name: Check if release branch name is valid
+        run: |
+          if [[ "${{ inputs.new_release_branch }}" =~ ^release\/v?[0-9]+\.[0-9]+$ ]]; then
+            echo "Valid release branch"
+          else
+            echo "Invalid release branch"
+            exit 1
+          fi
+        continue-on-error: false
+
+      - name: Create release branch
+        run: |
+          git checkout -b ${{ inputs.new_release_branch }}
+          git push origin ${{ inputs.new_release_branch }}
