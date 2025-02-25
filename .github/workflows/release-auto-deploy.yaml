@@ -1,0 +1,55 @@
+name: Release - Auto Deploy TAG
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        type: string
+        required: true
+      team:
+        description: Team to deploy
+        type: string
+        required: true
+      tag:
+        description: Tag to deploy
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment to deploy
+        type: string
+        required: true
+      team:
+        description: Team to deploy
+        type: string
+        required: true
+      tag:
+        description: Tag to deploy
+        type: string
+        required: true
+
+run-name: "Auto deploy TAG ${{ inputs.tag }} in ${{ inputs.environment }} for ${{ inputs.team }} team"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Deploy Team
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Deploy it
+        run: |
+          echo "Deploying ${{ inputs.tag }} to ${{ inputs.environment }} for ${{ inputs.team }} team."
+          echo "Done."
