@@ -1,0 +1,59 @@
+name: Get Teams Json from last success run
+description: Generate json file with all teams from last successful run
+
+inputs:
+  workflow_name:
+    description: Workflow Name to search last success run
+    required: true
+  repository_name:
+    description: Repository Name
+    required: true
+  gh_token:
+    description: GitHub Token to make API calls
+    required: true
+  branch:
+    description: Branch name to search pull requests
+    required: true
+  save_json_to:
+    description: Path to save the generated JSON file
+    required: false
+    default: 'build/teams.json'
+
+outputs:
+  teams:
+    description: "List of teams from last successful run"
+    value: ${{ steps.get_teams_json.outputs.teams }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      shell: bash
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install -r .github/scripts/requirements.txt
+
+    - name: Get Teams Json File
+      shell: bash
+      env:
+        BRANCH_NAME: ${{ inputs.branch }}
+        GITHUB_TOKEN: ${{ inputs.gh_token }}
+        SAVE_JSON_TO: ${{ inputs.save_json_to }}
+        WORKFLOW_NAME: ${{ inputs.workflow_name }}
+        REPOSITORY_NAME: ${{ inputs.repository_name }}
+      id: get_teams_json
+      run: |
+        python .github/scripts/get_teams_from_last_run.py
+        ls build || true
+        cat $SAVE_JSON_TO || true
+        echo "teams=$(jq -c '.teams' $SAVE_JSON_TO)" >> "$GITHUB_OUTPUT"
+
+    - name: Exibir matriz
+      shell: bash
+      run: |
+        echo "Teams: ${{ steps.get_teams_json.outputs.teams }}"

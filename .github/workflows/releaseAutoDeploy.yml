@@ -1,0 +1,40 @@
+name: Release - Deploy
+run-name: Release - Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-team: ${{ steps.get_teams.outputs.teams }}
+    steps:
+      - name: Discover Active Release
+        id: discover-release
+        uses: ./.github/actions/discover-active-release
+
+      - name: "Checkout source code"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.discover-release.outputs.active_release_branch }}
+
+      - name: Get changed Teams since last run
+        id: get_teams
+        uses: ./.github/actions/get_teams_last_run
+        with:
+          workflow_name: "Release - Deploy"
+          save_json_to: 'build/teams.json'
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ github.event.repository.name }}
+          branch: ${{ steps.discover-release.outputs.active_release_branch }}
+
+  deploy:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        team: ${{ fromJson(needs.discover.outputs.matrix-team) }}
+    steps:
+      - name: Deploy para ${{ matrix.team }}
+        run: echo "Deploy NOW... ${{ matrix.team }}"
