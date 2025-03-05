@@ -105,19 +105,21 @@ def save_teams_json(teams = []):
     if not teams:
         print(f"❌ Nenhum time valido encontrado, salvando json vazio!")
 
-    with open(SAVE_JSON_TO, 'w') as teamsfile:
+    os.makedirs(os.path.dirname(SAVE_JSON_TO), exist_ok=True)
+
+    with open(SAVE_JSON_TO, 'w+') as teamsfile:
         json.dump({"teams": teams}, teamsfile, indent=2)
 
 if __name__ == "__main__":
-    if not all([BRANCH_NAME, GITHUB_TOKEN, WORKFLOW_NAME, VALID_TEAMS, REPOSITORY_NAME, SAVE_JSON_TO]):
-        raise ValueError("Faltam variáveis de ambiente obrigatórias!")
-
     print("Iniciando processo de busca de workflows, prs, times...")
     print(f"BRANCH_NAME: {BRANCH_NAME}")
     print(f"VALID_TEAMS: {VALID_TEAMS}")
     print(f"SAVE_JSON_TO: {SAVE_JSON_TO}")
     print(f"WORKFLOW_NAME: {WORKFLOW_NAME}")
     print(f"REPOSITORY_NAME: {REPOSITORY_NAME}")
+
+    if not all([BRANCH_NAME, GITHUB_TOKEN, WORKFLOW_NAME, VALID_TEAMS, REPOSITORY_NAME, SAVE_JSON_TO]):
+        raise ValueError("Faltam variáveis de ambiente obrigatórias!")
 
     last_success_run_timestamp = get_last_successful_workflow_run_timestamp()
     if not last_success_run_timestamp:

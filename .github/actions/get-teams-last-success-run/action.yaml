@@ -18,6 +18,9 @@ inputs:
     description: Path to save the generated JSON file
     required: false
     default: 'build/teams.json'
+  valid_teams:
+    description: Path to save the generated JSON file
+    required: true
 
 outputs:
   teams:
@@ -27,12 +30,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Python
-      shell: bash
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
     - name: Install dependencies
       shell: bash
       run: |
@@ -43,6 +40,7 @@ runs:
       env:
         BRANCH_NAME: ${{ inputs.branch }}
         GITHUB_TOKEN: ${{ inputs.gh_token }}
+        VALID_TEAMS: ${{ inputs.valid_teams }}
         SAVE_JSON_TO: ${{ inputs.save_json_to }}
         WORKFLOW_NAME: ${{ inputs.workflow_name }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
