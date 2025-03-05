@@ -31,8 +31,7 @@ def get_last_successful_workflow_run_timestamp():
             return None
 
         url = f"https://api.github.com/repos/{REPOSITORY_NAME}/actions/workflows/{workflow_id}/runs"
-        params = {"status": "completed", "conclusion": "success", "per_page": 1}
-        response = requests.get(url, headers=HEADERS, params=params)
+        response = requests.get(url, headers=HEADERS, params={"per_page": 20})
 
         if response.status_code != 200:
             print(f"Erro na API de runs do workflow: {response.status_code} - {response.text}")
@@ -97,7 +96,7 @@ def get_teams_from_last_successfull_run(prs):
 
         return [team for team in VALID_TEAMS if team in recent_teams]
     except Exception as e:
-        print(f"❌ Erro ao listar arquivos e criar buildfile: {e}")
+        print(f"❌ Erro ao processar times: {e}")
 
     return []
 
@@ -105,19 +104,21 @@ def save_teams_json(teams = []):
     if not teams:
         print(f"❌ Nenhum time valido encontrado, salvando json vazio!")
 
-    with open(SAVE_JSON_TO, 'w') as teamsfile:
+    os.makedirs(os.path.dirname(SAVE_JSON_TO), exist_ok=True)
+
+    with open(SAVE_JSON_TO, 'w+') as teamsfile:
         json.dump({"teams": teams}, teamsfile, indent=2)
 
 if __name__ == "__main__":
-    if not all([BRANCH_NAME, GITHUB_TOKEN, WORKFLOW_NAME, VALID_TEAMS, REPOSITORY_NAME, SAVE_JSON_TO]):
-        raise ValueError("Faltam variáveis de ambiente obrigatórias!")
-
     print("Iniciando processo de busca de workflows, prs, times...")
     print(f"BRANCH_NAME: {BRANCH_NAME}")
     print(f"VALID_TEAMS: {VALID_TEAMS}")
     print(f"SAVE_JSON_TO: {SAVE_JSON_TO}")
     print(f"WORKFLOW_NAME: {WORKFLOW_NAME}")
     print(f"REPOSITORY_NAME: {REPOSITORY_NAME}")
+
+    if not all([BRANCH_NAME, GITHUB_TOKEN, WORKFLOW_NAME, VALID_TEAMS, REPOSITORY_NAME, SAVE_JSON_TO]):
+        raise ValueError("Faltam variáveis de ambiente obrigatórias!")
 
     last_success_run_timestamp = get_last_successful_workflow_run_timestamp()
     if not last_success_run_timestamp:

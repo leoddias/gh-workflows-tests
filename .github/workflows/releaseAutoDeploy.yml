@@ -9,32 +9,48 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix-team: ${{ steps.get_teams.outputs.teams }}
+      active-release: ${{ steps.discover-release.outputs.active_release_branch }}
     steps:
+      - name: "Fetch all code"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Discover Active Release
         id: discover-release
         uses: ./.github/actions/discover-active-release
 
-      - name: "Checkout source code"
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.discover-release.outputs.active_release_branch }}
-
       - name: Get changed Teams since last run
         id: get_teams
-        uses: ./.github/actions/get_teams_last_run
+        uses: ./.github/actions/get-teams-last-success-run
         with:
           workflow_name: "Release - Deploy"
           save_json_to: 'build/teams.json'
+          valid_teams: ${{ vars.VALID_TEAMS }}
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ github.event.repository.name }}
           branch: ${{ steps.discover-release.outputs.active_release_branch }}
 
+      - name: "Checkout to ${{ steps.discover-release.outputs.active_release_branch }}"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.discover-release.outputs.active_release_branch }}
+
   deploy:
     needs: discover
     runs-on: ubuntu-latest
+    if: ${{ needs.discover.outputs.matrix-team != '[]' }}
     strategy:
       matrix:
         team: ${{ fromJson(needs.discover.outputs.matrix-team) }}
     steps:
       - name: Deploy para ${{ matrix.team }}
-        run: echo "Deploy NOW... ${{ matrix.team }}"
+        run: |
+          ls
+          echo "Deploy NOW... ${{ matrix.team }}"
+          echo "Active release... ${{ needs.discover.outputs.active-release }}"
