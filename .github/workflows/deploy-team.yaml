@@ -1,0 +1,42 @@
+name: Release - Deploy Team
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        type: string
+        required: true
+      team:
+        description: Team to deploy
+        type: string
+        required: true
+      branch:
+        description: Branch to deploy
+        type: string
+        required: true
+
+
+run-name: "Auto deploy branch ${{ inputs.branch }} in ${{ inputs.environment }} for ${{ inputs.team }} team"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Deploy Team
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Deploy it
+        run: |
+          echo "Deploying ${{ inputs.branch }} to ${{ inputs.environment }} for ${{ inputs.team }} team."
+          echo "Done."
