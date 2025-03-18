@@ -1,0 +1,25 @@
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix-branch:
+        description: "Hotfix."
+        required: false
+        type: string
+        default: empty
+      release-branch:
+        description: "Release."
+        required: true
+        type: string
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout source code"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.hotfix-branch != 'empty' && github.event.inputs.hotfix-branch || github.event.inputs.release-branch }}
+      - name: "Run tests"
+        run: |
+          ls
+          echo ${{ github.event.inputs.hotfix-branch != 'empty' && github.event.inputs.hotfix-branch || github.event.inputs.release-branch }}
